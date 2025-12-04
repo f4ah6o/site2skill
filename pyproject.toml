@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "site2skill"
+version = "0.1.0"
+description = "Turn any website into a Claude Skill"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "beautifulsoup4>=4.12.0",
+    "markdownify>=0.11.0",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+site2skill = "site2skill.main:main"
+
+[tool.setuptools]
+packages = ["site2skill"]
+
+[tool.setuptools.package-data]
+site2skill = ["*.py"]
+
+[tool.uv]
+# No special uv settings needed yet
