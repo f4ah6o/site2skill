@@ -1,3 +1,20 @@
+// Package search provides full-text search functionality for documentation files in skill packages.
+//
+// It enables searching through generated skill documentation files and returning relevant
+// results with surrounding context. Results can be formatted as human-readable output or JSON.
+//
+// Example:
+//
+//	opts := SearchOptions{
+//		SkillDir:   "/path/to/skill",
+//		Query:      "authentication",
+//		MaxResults: 10,
+//	}
+//	results, err := SearchDocs(opts)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	FormatResults(results, opts.Query)
 package search
 
 import (
@@ -24,7 +41,16 @@ var (
 	colorWarning = color.New(color.FgYellow)
 )
 
-// extractFrontmatter parses YAML frontmatter from Markdown content
+// extractFrontmatter parses YAML frontmatter from Markdown content.
+//
+// Frontmatter is expected to be in the format:
+// ---
+// key: value
+// ---
+// Content here...
+//
+// It extracts title, source_url, and fetched_at fields if present.
+// Returns the parsed Frontmatter struct and the remaining body content.
 func extractFrontmatter(content string) (Frontmatter, string) {
 	fm := Frontmatter{
 		SourceURL: "Unknown",
@@ -66,7 +92,11 @@ func extractFrontmatter(content string) (Frontmatter, string) {
 	return fm, body
 }
 
-// getContext finds matches and extracts surrounding context lines
+// getContext finds keyword matches in text and extracts surrounding context lines.
+//
+// It searches for all keywords in the query (space-separated) and groups nearby matches.
+// For each group, it returns contextLines lines before and after the match. Matched lines
+// are prefixed with "> " and context lines with "  " for easy identification.
 func getContext(text, query string) []string {
 	lines := strings.Split(text, "\n")
 	keywords := strings.Fields(strings.ToLower(query))
@@ -126,7 +156,26 @@ func getContext(text, query string) []string {
 	return contexts
 }
 
-// SearchDocs searches documentation files in the skill directory
+// SearchDocs searches documentation files in the skill directory for keywords matching the query.
+//
+// It walks through all Markdown files in the docs subdirectory of the skill and searches for
+// matches. Results are sorted by match count (descending) and limited by MaxResults if specified.
+// Each result includes context lines surrounding the matches.
+//
+// Args:
+//	opts: SearchOptions containing the skill directory, query string, and result limit.
+//
+// Returns:
+//	A slice of SearchResult sorted by match count, or an error if the docs directory doesn't exist
+//	or if there are file read errors.
+//
+// Example:
+//
+//	results, err := SearchDocs(SearchOptions{
+//		SkillDir:   "/path/to/skill",
+//		Query:      "authentication",
+//		MaxResults: 10,
+//	})
 func SearchDocs(opts SearchOptions) ([]SearchResult, error) {
 	// Convert to absolute path
 	absSkillDir, err := filepath.Abs(opts.SkillDir)
@@ -201,7 +250,20 @@ func SearchDocs(opts SearchOptions) ([]SearchResult, error) {
 	return results, nil
 }
 
-// FormatResults prints results in a human-readable format
+// FormatResults formats and prints search results in a human-readable format to stdout.
+//
+// It displays a formatted table of results, each showing the file path, match count, source URL,
+// fetch timestamp, and context snippets (up to 3). Matched lines are prefixed with "> " for
+// easy identification, and context lines are prefixed with "  ". Output includes colored
+// headers and separators for better readability in terminals.
+//
+// Args:
+//	results: A slice of SearchResult to display.
+//	query: The original search query string, displayed in the header.
+//
+// Example:
+//
+//	FormatResults(results, "authentication")
 func FormatResults(results []SearchResult, query string) {
 	if len(results) == 0 {
 		fmt.Printf("No matches found for '%s'.\n", query)
@@ -229,14 +291,29 @@ func FormatResults(results []SearchResult, query string) {
 	}
 }
 
-// FormatJSON prints results as JSON
+// FormatJSON formats and prints search results as JSON to stdout.
+//
+// Results are printed with indentation for readability. Each SearchResult object includes
+// file path, match count, context snippets, source URL, and fetch timestamp.
+//
+// Args:
+//	results: A slice of SearchResult to format as JSON.
+//
+// Returns:
+//	An error if JSON encoding fails, otherwise nil.
+//
+// Example:
+//
+//	if err := FormatJSON(results); err != nil {
+//		log.Fatal(err)
+//	}
 func FormatJSON(results []SearchResult) error {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(results)
 }
 
-// Helper functions for min/max
+// min returns the smaller of two integers.
 func min(a, b int) int {
 	if a < b {
 		return a
@@ -244,6 +321,7 @@ func min(a, b int) int {
 	return b
 }
 
+// max returns the larger of two integers.
 func max(a, b int) int {
 	if a > b {
 		return a
