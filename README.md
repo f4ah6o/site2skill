@@ -2,7 +2,7 @@
 
 **Turn any documentation website into a Claude or Codex Agent Skill.**
 
-`s2s-go` is a tool that scrapes a documentation website, converts it to Markdown, and packages it as an Agent Skill (ZIP format) with proper entry points and search functionality.
+`s2sgo` is a tool that scrapes a documentation website, converts it to Markdown, and packages it as an Agent Skill (ZIP format) with proper entry points and search functionality.
 
 Agent Skills are dynamically loaded knowledge modules that AI assistants use on demand. This tool now supports both:
 - **Claude Agent Skills** - For Claude Code, Claude apps, and the API
@@ -22,7 +22,7 @@ Agent Skills are dynamically loaded knowledge modules that AI assistants use on 
 ### Using `go install` (Recommended)
 
 ```bash
-go install github.com/f4ah6o/site2skill-go/cmd/s2s-go@latest
+go install github.com/f4ah6o/site2skill-go/cmd/s2sgo@latest
 ```
 
 This will download and install the latest version globally. The binary will be placed in `$GOPATH/bin` (usually `~/go/bin`).
@@ -35,10 +35,10 @@ git clone https://github.com/f4ah6o/site2skill-go
 cd site2skill-go
 
 # Build the binary
-go build -o s2s-go ./cmd/s2s-go
+go build -o s2sgo ./cmd/s2sgo
 
 # Optional: Install globally
-go install ./cmd/s2s-go
+go install ./cmd/s2sgo
 ```
 
 ### Pre-built Binaries
@@ -51,16 +51,16 @@ Download the latest release from the [releases page](https://github.com/f4ah6o/s
 
 ```bash
 # Generate a Claude skill
-s2s-go https://docs.example.com myskill
+s2sgo https://docs.example.com myskill
 
 # Generate a Codex skill
-s2s-go https://docs.example.com myskill --format codex
+s2sgo https://docs.example.com myskill --format codex
 ```
 
 ### Full Options
 
 ```bash
-s2s-go <URL> <SKILL_NAME> [options]
+s2sgo <URL> <SKILL_NAME> [options]
 
 Options:
   --url string
@@ -85,16 +85,16 @@ Options:
 
 ```bash
 # Create a Claude skill for PAY.JP documentation
-s2s-go https://docs.pay.jp/v1/ payjp
+s2sgo https://docs.pay.jp/v1/ payjp
 
 # Create a Codex skill for Stripe API
-s2s-go https://stripe.com/docs/api stripe --format codex
+s2sgo https://stripe.com/docs/api stripe --format codex
 
 # Custom output directory
-s2s-go https://docs.python.org/3/ python3 --output ./my-skills --clean
+s2sgo https://docs.python.org/3/ python3 --output ./my-skills --clean
 
 # Skip fetching (reuse downloaded files)
-s2s-go https://docs.example.com example --skip-fetch
+s2sgo https://docs.example.com example --skip-fetch
 ```
 
 ## How it works
@@ -161,9 +161,9 @@ The original Python version is available in the `python-legacy` branch. The Go v
 go test ./...
 
 # Build for all platforms
-GOOS=linux GOARCH=amd64 go build -o s2s-go-linux-amd64 ./cmd/s2s-go
-GOOS=darwin GOARCH=amd64 go build -o s2s-go-darwin-amd64 ./cmd/s2s-go
-GOOS=windows GOARCH=amd64 go build -o s2s-go-windows-amd64.exe ./cmd/s2s-go
+GOOS=linux GOARCH=amd64 go build -o s2sgo-linux-amd64 ./cmd/s2sgo
+GOOS=darwin GOARCH=amd64 go build -o s2sgo-darwin-amd64 ./cmd/s2sgo
+GOOS=windows GOARCH=amd64 go build -o s2sgo-windows-amd64.exe ./cmd/s2sgo
 ```
 
 ## License
