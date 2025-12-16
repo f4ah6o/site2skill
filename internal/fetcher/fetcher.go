@@ -46,7 +46,14 @@ func New(outputDir string) *Fetcher {
 // same-domain links up to maxDepth. It validates the URL scheme and saves
 // all HTML files to the output directory in a structure preserving the original paths.
 // targetURL must be a valid http or https URL with a domain.
+// If the URL scheme is omitted, https:// is automatically prepended.
 func (f *Fetcher) Fetch(targetURL string) error {
+	// Auto-prepend https:// if no scheme is provided
+	if !strings.HasPrefix(targetURL, "http://") && !strings.HasPrefix(targetURL, "https://") {
+		targetURL = "https://" + targetURL
+		log.Printf("No scheme provided, using: %s", targetURL)
+	}
+
 	parsedURL, err := url.Parse(targetURL)
 	if err != nil {
 		return fmt.Errorf("invalid URL: %w", err)
