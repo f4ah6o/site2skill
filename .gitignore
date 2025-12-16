@@ -30,6 +30,7 @@ venv/
 
 # Go
 bin/
+s2s-go
 *.exe
 *.exe~
 *.dll
