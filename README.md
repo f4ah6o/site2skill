@@ -19,6 +19,14 @@ Agent Skills are dynamically loaded knowledge modules that AI assistants use on 
 
 ## Installation
 
+### Using `go install` (Recommended)
+
+```bash
+go install github.com/laiso/site2skill/cmd/site2skill@latest
+```
+
+This will download and install the latest version globally. The binary will be placed in `$GOPATH/bin` (usually `~/go/bin`).
+
 ### From Source
 
 ```bash
