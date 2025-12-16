@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-s2sgo = "site2skillgo.main:main"
+site2skillgo = "site2skillgo.main:main"
 
 [tool.setuptools]
 packages = ["site2skillgo"]

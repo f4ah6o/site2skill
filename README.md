@@ -2,7 +2,7 @@
 
 **Turn any documentation website into a Claude or Codex Agent Skill.**
 
-`s2sgo` is a tool that scrapes a documentation website, converts it to Markdown, and packages it as an Agent Skill (ZIP format) with proper entry points and search functionality.
+`site2skillgo` is a tool that scrapes a documentation website, converts it to Markdown, and packages it as an Agent Skill (ZIP format) with proper entry points and search functionality.
 
 Agent Skills are dynamically loaded knowledge modules that AI assistants use on demand. This tool now supports both:
 - **Claude Agent Skills** - For Claude Code, Claude apps, and the API
@@ -22,7 +22,7 @@ Agent Skills are dynamically loaded knowledge modules that AI assistants use on 
 ### Using `go install` (Recommended)
 
 ```bash
-go install github.com/f4ah6o/site2skill-go/cmd/s2sgo@latest
+go install github.com/f4ah6o/site2skill-go/cmd/site2skillgo@latest
 ```
 
 This will download and install the latest version globally. The binary will be placed in `$GOPATH/bin` (usually `~/go/bin`).
@@ -35,10 +35,10 @@ git clone https://github.com/f4ah6o/site2skill-go
 cd site2skill-go
 
 # Build the binary
-go build -o s2sgo ./cmd/s2sgo
+go build -o site2skillgo ./cmd/site2skillgo
 
 # Optional: Install globally
-go install ./cmd/s2sgo
+go install ./cmd/site2skillgo
 ```
 
 ### Pre-built Binaries
@@ -51,16 +51,16 @@ Download the latest release from the [releases page](https://github.com/f4ah6o/s
 
 ```bash
 # Generate a Claude skill
-s2sgo https://docs.example.com myskill
+site2skillgo https://docs.example.com myskill
 
 # Generate a Codex skill
-s2sgo https://docs.example.com myskill --format codex
+site2skillgo https://docs.example.com myskill --format codex
 ```
 
 ### Full Options
 
 ```bash
-s2sgo <URL> <SKILL_NAME> [options]
+site2skillgo <URL> <SKILL_NAME> [options]
 
 Options:
   --url string
@@ -85,16 +85,16 @@ Options:
 
 ```bash
 # Create a Claude skill for PAY.JP documentation
-s2sgo https://docs.pay.jp/v1/ payjp
+site2skillgo https://docs.pay.jp/v1/ payjp
 
 # Create a Codex skill for Stripe API
-s2sgo https://stripe.com/docs/api stripe --format codex
+site2skillgo https://stripe.com/docs/api stripe --format codex
 
 # Custom output directory
-s2sgo https://docs.python.org/3/ python3 --output ./my-skills --clean
+site2skillgo https://docs.python.org/3/ python3 --output ./my-skills --clean
 
 # Skip fetching (reuse downloaded files)
-s2sgo https://docs.example.com example --skip-fetch
+site2skillgo https://docs.example.com example --skip-fetch
 ```
 
 ## How it works
@@ -117,7 +117,7 @@ The tool generates a skill directory with the following structure:
 
 Additionally, a `<skill_name>.skill` file (ZIP archive) is created.
 
-Use the built-in `s2sgo search` command to search through documentation files.
+Use the built-in `site2skillgo search` command to search through documentation files.
 
 ## Format Differences
 
@@ -135,14 +135,14 @@ Use the built-in `s2sgo search` command to search through documentation files.
 
 ## Search Tool
 
-Use the `s2sgo search` command to search through skill documentation:
+Use the `site2skillgo search` command to search through skill documentation:
 
 ```bash
 # Search documentation
-s2sgo search "query" --skill-dir .claude/skills/<skill_name>
+site2skillgo search "query" --skill-dir .claude/skills/<skill_name>
 
 # JSON output with limited results
-s2sgo search "query" --json --max-results 5 --skill-dir .claude/skills/<skill_name>
+site2skillgo search "query" --json --max-results 5 --skill-dir .claude/skills/<skill_name>
 ```
 
 ## Python Version (Legacy)
@@ -161,9 +161,9 @@ The original Python version is available in the `python-legacy` branch. The Go v
 go test ./...
 
 # Build for all platforms
-GOOS=linux GOARCH=amd64 go build -o s2sgo-linux-amd64 ./cmd/s2sgo
-GOOS=darwin GOARCH=amd64 go build -o s2sgo-darwin-amd64 ./cmd/s2sgo
-GOOS=windows GOARCH=amd64 go build -o s2sgo-windows-amd64.exe ./cmd/s2sgo
+GOOS=linux GOARCH=amd64 go build -o site2skillgo-linux-amd64 ./cmd/site2skillgo
+GOOS=darwin GOARCH=amd64 go build -o site2skillgo-darwin-amd64 ./cmd/site2skillgo
+GOOS=windows GOARCH=amd64 go build -o site2skillgo-windows-amd64.exe ./cmd/site2skillgo
 ```
 
 ## License
