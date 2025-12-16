@@ -51,50 +51,72 @@ Download the latest release from the [releases page](https://github.com/f4ah6o/s
 
 ```bash
 # Generate a Claude skill
-site2skillgo https://docs.example.com myskill
+site2skillgo generate https://docs.example.com myskill
 
 # Generate a Codex skill
-site2skillgo https://docs.example.com myskill --format codex
+site2skillgo generate https://docs.example.com myskill --format codex
 ```
 
-### Full Options
+### Commands
+
+#### Generate Command
+
+Generate a skill package from a documentation website:
 
 ```bash
-site2skillgo <URL> <SKILL_NAME> [options]
-
-Options:
-  --url string
-        URL of the documentation site (required)
-  --name string
-        Name of the skill (required)
-  --format string
-        Output format: claude or codex (default "claude")
-  --output string
-        Base output directory for skill structure (default ".claude/skills")
-  --skill-output string
-        Output directory for .skill file (default ".")
-  --temp-dir string
-        Temporary directory for processing (default "build")
-  --skip-fetch
-        Skip the download step (use existing files in temp dir)
-  --clean
-        Clean up temporary directory after completion
+site2skillgo generate <URL> <SKILL_NAME> [options]
 ```
+
+**Options:**
+- `--format string`
+  - Output format: `claude` or `codex` (default "claude")
+- `--output string`
+  - Base output directory for skill structure (default ".claude/skills")
+- `--skill-output string`
+  - Output directory for .skill file (default ".")
+- `--temp-dir string`
+  - Temporary directory for processing (default "build")
+- `--skip-fetch`
+  - Skip the download step (use existing files in temp dir)
+- `--clean`
+  - Clean up temporary directory after completion
+
+#### Search Command
+
+Search through skill documentation:
+
+```bash
+site2skillgo search <QUERY> [options]
+```
+
+**Options:**
+- `--skill-dir string`
+  - Path to the skill directory (default ".")
+- `--max-results int`
+  - Maximum number of results to display (default 10)
+- `--json`
+  - Output results as JSON
 
 ### Examples
 
 ```bash
 # Create a Claude skill for PAY.JP documentation
-site2skillgo https://docs.pay.jp/v1/ payjp
+site2skillgo generate https://docs.pay.jp/v1/ payjp
 
 # Create a Codex skill for Stripe API
-site2skillgo https://stripe.com/docs/api stripe --format codex
+site2skillgo generate https://stripe.com/docs/api stripe --format codex
 
 # Custom output directory
-site2skillgo https://docs.python.org/3/ python3 --output ./my-skills --clean
+site2skillgo generate https://docs.python.org/3/ python3 --output ./my-skills --clean
 
 # Skip fetching (reuse downloaded files)
-site2skillgo https://docs.example.com example --skip-fetch
+site2skillgo generate https://docs.example.com example --skip-fetch
+
+# Search in skill documentation
+site2skillgo search "authentication" --skill-dir .claude/skills/myskill
+
+# Search with JSON output (limited results)
+site2skillgo search "api endpoint" --json --max-results 5 --skill-dir .claude/skills/myskill
 ```
 
 ## How it works
@@ -133,17 +155,9 @@ Use the built-in `site2skillgo search` command to search through documentation f
 - JSON output support
 - Simplified search interface
 
-## Search Tool
+## Search Functionality
 
-Use the `site2skillgo search` command to search through skill documentation:
-
-```bash
-# Search documentation
-site2skillgo search "query" --skill-dir .claude/skills/<skill_name>
-
-# JSON output with limited results
-site2skillgo search "query" --json --max-results 5 --skill-dir .claude/skills/<skill_name>
-```
+The `site2skillgo search` command is automatically embedded in each generated skill and can also be used via the command line to search through skill documentation. See the [Search Command](#search-command) section above for usage details.
 
 ## Python Version (Legacy)
 
