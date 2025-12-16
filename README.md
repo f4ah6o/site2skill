@@ -117,7 +117,7 @@ The tool generates a skill directory with the following structure:
 
 Additionally, a `<skill_name>.skill` file (ZIP archive) is created.
 
-Use the built-in `s2s-go search` command to search through documentation files.
+Use the built-in `s2sgo search` command to search through documentation files.
 
 ## Format Differences
 
@@ -135,14 +135,14 @@ Use the built-in `s2s-go search` command to search through documentation files.
 
 ## Search Tool
 
-Use the `s2s-go search` command to search through skill documentation:
+Use the `s2sgo search` command to search through skill documentation:
 
 ```bash
 # Search documentation
-s2s-go search "query" --skill-dir .claude/skills/<skill_name>
+s2sgo search "query" --skill-dir .claude/skills/<skill_name>
 
 # JSON output with limited results
-s2s-go search "query" --json --max-results 5 --skill-dir .claude/skills/<skill_name>
+s2sgo search "query" --json --max-results 5 --skill-dir .claude/skills/<skill_name>
 ```
 
 ## Python Version (Legacy)
