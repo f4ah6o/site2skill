@@ -28,14 +28,32 @@ jobs:
       - name: Setup uv (for Python benchmark)
         uses: astral-sh/setup-uv@v4
 
-      - name: Run site2skill-go crawl
+      - name: Run site2skill-go crawl (default)
         run: |
-          echo "=== Running site2skill-go ==="
+          echo "=== Running site2skill-go (default) ==="
           time ./site2skillgo generate https://f4ah6o.github.io/site2skill-go/ test-go-skill
           echo ""
           echo "=== Go version results ==="
           find .claude/skills/test-go-skill -type f -name "*.md" | head -20
           find .claude/skills/test-go-skill -type f | wc -l
+        continue-on-error: true
+
+      - name: Run site2skill-go crawl (--locale-priority)
+        run: |
+          echo "=== Running site2skill-go with --locale-priority ja,en ==="
+          time ./site2skillgo generate --locale-priority "ja,en" https://f4ah6o.github.io/site2skill-go/ test-go-skill-locale
+          echo ""
+          find .claude/skills/test-go-skill-locale -type f -name "*.md" | head -20
+          find .claude/skills/test-go-skill-locale -type f | wc -l
+        continue-on-error: true
+
+      - name: Run site2skill-go crawl (--no-locale-priority)
+        run: |
+          echo "=== Running site2skill-go with --no-locale-priority ==="
+          time ./site2skillgo generate --no-locale-priority https://f4ah6o.github.io/site2skill-go/ test-go-skill-no-locale
+          echo ""
+          find .claude/skills/test-go-skill-no-locale -type f -name "*.md" | head -20
+          find .claude/skills/test-go-skill-no-locale -type f | wc -l
         continue-on-error: true
 
       - name: Run Python site2skill crawl (benchmark)
@@ -57,7 +75,11 @@ jobs:
           echo ""
           echo "--- Go version (site2skill-go) ---"
           GO_FILES=$(find .claude/skills/test-go-skill -type f 2>/dev/null | wc -l || echo "0")
-          echo "Total files: $GO_FILES"
+          GO_LOCALE_FILES=$(find .claude/skills/test-go-skill-locale -type f 2>/dev/null | wc -l || echo "0")
+          GO_NO_LOCALE_FILES=$(find .claude/skills/test-go-skill-no-locale -type f 2>/dev/null | wc -l || echo "0")
+          echo "Total files (default): $GO_FILES"
+          echo "Total files (--locale-priority): $GO_LOCALE_FILES"
+          echo "Total files (--no-locale-priority): $GO_NO_LOCALE_FILES"
           echo ""
           echo "--- Python version (site2skill) ---"
           PY_FILES=$(find .claude/skills/test-python-skill -type f 2>/dev/null | wc -l || echo "0")
@@ -69,12 +91,14 @@ jobs:
           cat >> $GITHUB_STEP_SUMMARY << EOF
           ## 🚀 Crawl E2E Benchmark Results
 
-          | Version | Files Generated |
-          |---------|----------------:|
-          | **Go** (site2skill-go) | $GO_FILES |
-          | **Python** (site2skill) | $PY_FILES |
+          | Version | Options | Files Generated |
+          |---------|---------|----------------:|
+          | **Go** (site2skill-go) | (default) | $GO_FILES |
+          | **Go** (site2skill-go) | \`--locale-priority ja,en\` | $GO_LOCALE_FILES |
+          | **Go** (site2skill-go) | \`--no-locale-priority\` | $GO_NO_LOCALE_FILES |
+          | **Python** (site2skill) | (none - no locale support) | $PY_FILES |
 
-          ### 📁 Generated Files (Go)
+          ### 📁 Generated Files (Go default)
           \`\`\`
           $(find .claude/skills/test-go-skill -type f -name "*.md" 2>/dev/null | head -10 || echo "No files found")
           \`\`\`

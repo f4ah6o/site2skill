@@ -75,6 +75,13 @@ site2skillgo generate <URL> <SKILL_NAME> [options]
   - Skip the download step (use existing files in temp dir)
 - `--clean`
   - Clean up temporary directory after completion
+- `--locale-priority string`
+  - Locale priority order for crawling (default "en,ja")
+  - Fetches content only once per canonical path, prioritizing the highest available locale
+- `--no-locale-priority`
+  - Disable locale priority mode (fetch all locale variants)
+- `--locale-param string`
+  - Query parameter name for locale (e.g., "hl" for `?hl=ja`)
 
 #### Search Command
 
@@ -110,6 +117,15 @@ site2skillgo generate --global --clean https://f4ah6o.github.io/site2skill-go/ s
 # Skip fetching (reuse downloaded files)
 site2skillgo generate --skip-fetch https://f4ah6o.github.io/site2skill-go/ site2skill
 
+# Crawl with Japanese priority (ja > en > others)
+site2skillgo generate --locale-priority "ja,en" https://f4ah6o.github.io/site2skill-go/ myskill
+
+# Use query parameter for locale (e.g., ?hl=ja)
+site2skillgo generate --locale-param "hl" https://f4ah6o.github.io/site2skill-go/ myskill
+
+# Disable locale priority (fetch all variants)
+site2skillgo generate --no-locale-priority https://f4ah6o.github.io/site2skill-go/ myskill
+
 # Search in skill documentation
 site2skillgo search "authentication" --skill-dir .claude/skills/site2skill
 
@@ -126,10 +142,27 @@ site2skillgo search "api endpoint" --json --max-results 5 --skill-dir .claude/sk
 ## How it works
 
 1. **Fetch**: Downloads the documentation site recursively using built-in HTTP crawler
+   - Supports locale-aware crawling to avoid duplicate content downloads
+   - Uses HEAD requests to efficiently check locale availability
 2. **Convert**: Converts HTML pages to Markdown using smart content extraction
 3. **Normalize**: Cleans up links and formatting, converts relative URLs to absolute
 4. **Validate**: Checks the skill structure and size limits (8MB for Claude)
 5. **Package**: Generates SKILL.md and zips everything into a `.skill` file
+
+## Locale Priority Feature
+
+The `--locale-priority` option optimizes crawling for multi-language documentation sites:
+
+- **Prioritized fetching**: For each canonical path, only the highest-priority available locale is fetched
+- **HEAD request optimization**: Uses lightweight HEAD requests to check locale existence before full download
+- **Reduced server load**: Avoids downloading duplicate content across multiple locales
+
+### Supported URL Patterns
+
+| Pattern | Example | Description |
+|---------|---------|-------------|
+| Path-based | `/docs/ja/getting-started/` | Locale embedded in URL path |
+| Query-based | `/docs/getting-started/?hl=ja` | Locale via query parameter (use `--locale-param`) |
 
 ## Output Structure
 
