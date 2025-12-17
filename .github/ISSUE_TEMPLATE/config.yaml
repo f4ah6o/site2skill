@@ -1,0 +1,6 @@
+blank_issues_enabled: false  # 重要: これをfalseにすると「何もないIssue」を作れなくなります
+
+contact_links:
+  - name: Site2Skill Hub Support
+    url: https://github.com/f4ah6o/site2skill-hub/discussions
+    about: 自動化の不具合や質問はこちらへ（Issueはクロール依頼専用です）
