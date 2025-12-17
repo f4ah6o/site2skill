@@ -35,6 +35,7 @@ type Fetcher struct {
 	startTime        time.Time
 	client           *http.Client
 	localeConfig     *LocaleConfig // ロケール優先設定（nil で無効）
+	robots           *RobotsManager
 }
 
 // New creates a new Fetcher instance configured to save downloads to outputDir.
@@ -85,6 +86,12 @@ func (f *Fetcher) Fetch(targetURL string) error {
 	f.domain = parsedURL.Host
 	crawlDir := filepath.Join(f.outputDir, "crawl")
 
+	// Initialize robots.txt manager
+	f.robots = NewRobotsManager(f.client, "site2skillgo/1.0", parsedURL.Path)
+	baseURL := parsedURL.Scheme + "://" + parsedURL.Host
+	// Ignore error (fail open)
+	_ = f.robots.FetchRobotsTxt(baseURL)
+
 	// Clean/Create crawl directory
 	if err := os.RemoveAll(crawlDir); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("failed to remove crawl dir: %w", err)
@@ -120,6 +127,13 @@ func (f *Fetcher) crawl(targetURL, crawlDir string, depth int) error {
 		return nil
 	}
 
+	// Check robots.txt
+	if !f.robots.IsAllowed(targetURL) {
+		// Only log verbose? Or silently skip.
+		// For now, silently skip to avoid noise, or maybe debug log.
+		return nil
+	}
+
 	// ロケール優先モードの場合、canonical path ベースで重複チェック
 	if f.localeConfig != nil {
 		parsedURL, err := url.Parse(targetURL)
@@ -128,7 +142,7 @@ func (f *Fetcher) crawl(targetURL, crawlDir string, depth int) error {
 		}
 
 		_, canonical := ExtractLocale(parsedURL, f.localeConfig)
-		
+
 		f.mu.Lock()
 		if f.visitedCanonical[canonical] {
 			f.mu.Unlock()
@@ -242,6 +256,7 @@ func (f *Fetcher) crawl(targetURL, crawlDir string, depth int) error {
 
 // getFilePath constructs a file path for saving a downloaded page.
 // It creates a structure like crawl/domain.com/path/to/page.html, using index.html for root paths.
+// If query parameters are present, they are encoded into the filename to avoid collisions.
 func (f *Fetcher) getFilePath(crawlDir string, parsedURL *url.URL) string {
 	// Create path like: crawl/domain.com/path/to/page.html
 	path := parsedURL.Path
@@ -251,6 +266,23 @@ func (f *Fetcher) getFilePath(crawlDir string, parsedURL *url.URL) string {
 
 	// Remove trailing slash
 	path = strings.TrimSuffix(path, "/")
+
+	// Handle query parameters
+	query := parsedURL.Query()
+	if len(query) > 0 {
+		// Encode query params into filename: page_key_val.html
+		// Or simpler: page_QUERYHASH.html or page.html?key=val -> page_...
+		// Using a simplified deterministic encoding for readability where possible
+
+		// Sort keys for determinism
+		encodedQuery := query.Encode() // e.g., "hl=ja&key=val"
+		// Replace characters invalid in filenames
+		safeQuery := strings.ReplaceAll(encodedQuery, "&", "_")
+		safeQuery = strings.ReplaceAll(safeQuery, "=", "_")
+		safeQuery = strings.ReplaceAll(safeQuery, "%", "")
+
+		path += "_q_" + safeQuery
+	}
 
 	// Add .html if no extension
 	if filepath.Ext(path) == "" {

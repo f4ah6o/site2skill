@@ -41,14 +41,15 @@ var KnownLocales = map[string]bool{
 }
 
 // localePathPattern matches path-based locale patterns in URLs.
-// It captures locale codes like "ja" or "en-us" at the start of the path (e.g., /ja/docs/page).
-var localePathPattern = regexp.MustCompile(`^/([a-z]{2}(?:-[a-zA-Z]{2,4})?)/`)
+// It looks for locale codes enclosed in slashes (e.g., /ja/ or /en-us/) anywhere in the path.
+var localePathPattern = regexp.MustCompile(`/([a-z]{2}(?:-[a-zA-Z]{2,4})?)/`)
 
 // ExtractLocale extracts the locale and canonical path from a URL based on the provided configuration.
 //
 // It supports two locale detection modes:
 //   - Query parameter mode: Uses the configured ParamName (e.g., ?hl=ja)
-//   - Path mode: Detects locale from the start of the path (e.g., /ja/docs/page -> locale="ja", canonical="/docs/page")
+//   - Path mode: Detects locale from the first valid locale segment in the path
+//     (e.g., /site/ja/docs -> locale="ja", canonical="/site/docs")
 //
 // Returns the detected locale and the canonical path without locale information.
 // If no locale is detected, locale is empty string and canonical is the full path.
@@ -67,12 +68,30 @@ func ExtractLocale(u *url.URL, cfg *LocaleConfig) (locale, canonical string) {
 
 	// パス形式の自動検出
 	path := u.Path
-	matches := localePathPattern.FindStringSubmatch(path)
-	if len(matches) >= 2 {
-		potentialLocale := strings.ToLower(matches[1])
+
+	// パス内のすべてのマッチ候補を探す
+	matches := localePathPattern.FindAllStringSubmatchIndex(path, -1)
+
+	for _, match := range matches {
+		// match[2], match[3] がキャプチャグループ1 (ロケール部分) のインデックス
+		localePart := path[match[2]:match[3]]
+		potentialLocale := strings.ToLower(localePart) // インデックス部分のスライス
+
 		if KnownLocales[potentialLocale] {
 			locale = potentialLocale
-			canonical = strings.TrimPrefix(path, "/"+matches[1])
+
+			// canonical path の再構築
+			// /prefix/ja/docs -> /prefix/docs
+			// マッチ全体 (/ja/) を / に置換するのは不正確 (複数のスラッシュが絡むため)
+			// 単純に /locale/ を / に置換する
+
+			// マッチ箇所を削除してスラッシュを一つ残す
+			// match[0], match[1] がマッチ全体 (/ja/)
+			canonical = path[:match[0]] + "/" + path[match[1]:]
+
+			// 連続するスラッシュの整理（/prefix//docs -> /prefix/docs）
+			canonical = strings.ReplaceAll(canonical, "//", "/")
+
 			if canonical == "" {
 				canonical = "/"
 			}
