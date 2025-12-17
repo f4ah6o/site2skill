@@ -11,7 +11,7 @@ body:
     id: name
     attributes:
       label: name
-      description: Skill name (e.g. `my-skill`). Allowed: a-zA-Z0-9._-
+      description: "Skill name (e.g. `my-skill`). Allowed: a-zA-Z0-9._-"
       placeholder: my-skill
     validations:
       required: true
