@@ -29,15 +29,22 @@ jobs:
       - name: Parse and Validate
         id: parse
         shell: bash
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
           set -euo pipefail
-          # 改行コード削除
-          body=$(echo "${{ github.event.issue.body }}" | tr -d '\r')
+          # 改行コード削除（環境変数経由で安全に受け取る）
+          body=$(printf '%s' "$ISSUE_BODY" | tr -d '\r')
 
-          # "### header" の次の行を取得する関数
+          # "### header" の次の非空行を取得する関数
           get_field() {
             local header="$1"
-            echo "$body" | awk -v h="### $header" '$0 ~ h {flag=1; next} flag && NF {print $0; exit}'
+            printf '%s' "$body" | awk -v h="### $header" '
+              $0 ~ h { flag=1; next }
+              flag && /^###/ { exit }
+              flag && /^[[:space:]]*$/ { next }
+              flag && NF { gsub(/^[[:space:]]+|[[:space:]]+$/, ""); print; exit }
+            '
           }
 
           URL="$(get_field 'url')"
@@ -53,7 +60,7 @@ jobs:
           # IPアドレス除外などは簡易的に
           if echo "$URL" | grep -Eqi 'https://(localhost|127\.|0\.0\.0\.0|10\.|192\.168\.|172\.)'; then IS_VALID="false"; fi
           if echo "$NAME" | grep -Eq '[^a-zA-Z0-9._-]'; then IS_VALID="false"; fi
-          
+
           echo "is_valid=$IS_VALID" >> "$GITHUB_OUTPUT"
 
       - name: Comment if invalid
