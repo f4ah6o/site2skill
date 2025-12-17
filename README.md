@@ -64,10 +64,9 @@ site2skillgo generate <URL> <SKILL_NAME> [options]
 **Options:**
 - `--format string`
   - Output format: `claude`, `codex`, or `both` (default "claude")
-- `--output string`
-  - Base output directory for skill structure (default ".claude/skills")
-- `--skill-output string`
-  - Output directory for .skill file (default ".")
+- `--global`
+  - Install to global skills directory (`~/.claude/skills` or `~/.codex/skills`)
+  - Default: local installation (`./.claude/skills` or `./.codex/skills`)
 - `--temp-dir string`
   - Temporary directory for processing (default "build")
 - `--skip-fetch`
@@ -103,8 +102,8 @@ site2skillgo generate --format codex https://f4ah6o.github.io/site2skill-go/ sit
 # Create both Claude and Codex skills
 site2skillgo generate --format both https://f4ah6o.github.io/site2skill-go/ site2skill
 
-# Custom output directory
-site2skillgo generate --output ./my-skills --clean https://f4ah6o.github.io/site2skill-go/ site2skill
+# Install to global skills directory
+site2skillgo generate --global --clean https://f4ah6o.github.io/site2skill-go/ site2skill
 
 # Skip fetching (reuse downloaded files)
 site2skillgo generate --skip-fetch https://f4ah6o.github.io/site2skill-go/ site2skill
@@ -151,13 +150,6 @@ Use the built-in `site2skillgo search` command to search through documentation f
 - Plain markdown structure
 - JSON output support
 - Simplified search interface
-
-> **Note**: To use Codex skills, you need to enable the skills feature in `~/.codex/config.toml`:
-> ```toml
-> [features]
-> skills = true
-> ```
-> When generating with `--format codex` or `--format both`, a reminder will be displayed if this setting is missing.
 
 ### Both Format
 - Generates both Claude and Codex skill packages from the same documentation source
