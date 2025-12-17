@@ -65,6 +65,21 @@ jobs:
           echo ""
           echo "========================================"
 
+          # Job Summary output
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 🚀 Crawl E2E Benchmark Results
+
+          | Version | Files Generated |
+          |---------|----------------:|
+          | **Go** (site2skill-go) | $GO_FILES |
+          | **Python** (site2skill) | $PY_FILES |
+
+          ### 📁 Generated Files (Go)
+          \`\`\`
+          $(find .claude/skills/test-go-skill -type f -name "*.md" 2>/dev/null | head -10 || echo "No files found")
+          \`\`\`
+          EOF
+
       - name: Upload Go skill artifact
         uses: actions/upload-artifact@v4
         with:
@@ -101,10 +116,13 @@ jobs:
           echo ""
           echo "=== Checking for forbidden content ==="
 
+          RESULT_NG="✅ PASS"
+          RESULT_FORBIDDEN="✅ PASS"
+
           # Check if /docs/ng/ content was crawled (SHOULD NOT BE)
           if grep -r "robots.txt BLOCKED" .claude/skills/robots-test-skill/ 2>/dev/null; then
             echo "❌ FAIL: /docs/ng/ content was crawled despite robots.txt disallow!"
-            exit 1
+            RESULT_NG="❌ FAIL"
           else
             echo "✅ PASS: /docs/ng/ was correctly blocked"
           fi
@@ -112,10 +130,25 @@ jobs:
           # Check if /docs/ja/forbidden/ content was crawled (SHOULD NOT BE)
           if grep -r "禁止コンテンツ" .claude/skills/robots-test-skill/ 2>/dev/null; then
             echo "❌ FAIL: /docs/ja/forbidden/ content was crawled despite robots.txt disallow!"
-            exit 1
+            RESULT_FORBIDDEN="❌ FAIL"
           else
             echo "✅ PASS: /docs/ja/forbidden/ was correctly blocked"
           fi
 
           echo ""
           echo "=== robots.txt compliance verified ==="
+
+          # Job Summary output
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 🤖 robots.txt Compliance Test
+
+          | Test | Result |
+          |------|--------|
+          | \`/docs/ng/\` blocked | $RESULT_NG |
+          | \`/docs/ja/forbidden/\` blocked | $RESULT_FORBIDDEN |
+          EOF
+
+          # Exit with error if any test failed
+          if [[ "$RESULT_NG" == "❌ FAIL" ]] || [[ "$RESULT_FORBIDDEN" == "❌ FAIL" ]]; then
+            exit 1
+          fi
