@@ -210,6 +210,44 @@ Disallow:</code></pre>
             </tbody>
         </table>
 
+        <h2>site2skillgo Usage</h2>
+        <h3>Basic Command</h3>
+        <pre><code>site2skillgo generate &lt;URL&gt; &lt;SKILL_NAME&gt; [options]</code></pre>
+
+        <h3>Locale Priority Options</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Option</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>--locale-priority</code></td>
+                    <td>Locale priority order (default "en,ja")</td>
+                </tr>
+                <tr>
+                    <td><code>--no-locale-priority</code></td>
+                    <td>Disable locale priority mode</td>
+                </tr>
+                <tr>
+                    <td><code>--locale-param</code></td>
+                    <td>Query parameter name for locale (e.g., "hl")</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Examples</h3>
+        <pre><code># Crawl with Japanese priority
+site2skillgo generate --locale-priority "ja,en" https://f4ah6o.github.io/site2skill-go/ myskill
+
+# Use query parameter for locale
+site2skillgo generate --locale-param "hl" https://f4ah6o.github.io/site2skill-go/ myskill
+
+# Disable locale priority
+site2skillgo generate --no-locale-priority https://f4ah6o.github.io/site2skill-go/ myskill</code></pre>
+
         <h2>Notes</h2>
         <ul>
             <li>No redirects are intentionally used</li>

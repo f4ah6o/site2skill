@@ -120,9 +120,20 @@ Commands:
   search      Search through skill documentation files
   help        Show this help message
 
+Generate Options:
+  --format string          Output format: claude, codex, or both (default "claude")
+  --global                 Install to global skills directory
+  --temp-dir string        Temporary directory for processing (default "build")
+  --skip-fetch             Skip the download step (use existing files)
+  --clean                  Clean up temporary directory after completion
+  --locale-priority string Locale priority order (default "en,ja")
+  --no-locale-priority     Disable locale priority mode
+  --locale-param string    Query parameter name for locale (e.g., "hl")
+
 Examples:
-  site2skillgo generate https://docs.example.com myskill
-  site2skillgo generate https://stripe.com/docs/api stripe --format codex
+  site2skillgo generate https://f4ah6o.github.io/site2skill-go/ myskill
+  site2skillgo generate https://f4ah6o.github.io/site2skill-go/ myskill --format codex
+  site2skillgo generate --locale-priority "ja,en" https://f4ah6o.github.io/site2skill-go/ myskill
   site2skillgo search "authentication" --skill-dir .claude/skills/myskill
 
 For more information on a command, use:
