@@ -123,6 +123,9 @@ fetched_at: "%s"
 	return nil
 }
 
+// cleanHTML removes unwanted elements from the selected HTML content.
+// It eliminates scripts, styles, navigation elements, and other non-content sections
+// to isolate the main documentation content.
 func (c *Converter) cleanHTML(sel *goquery.Selection) {
 	// Remove unwanted elements
 	unwantedSelectors := []string{
@@ -136,6 +139,8 @@ func (c *Converter) cleanHTML(sel *goquery.Selection) {
 	}
 }
 
+// postProcessMarkdown applies final formatting to Markdown content.
+// It removes excessive blank lines and trailing whitespace from each line.
 func (c *Converter) postProcessMarkdown(md string) string {
 	// Remove multiple consecutive blank lines
 	re := regexp.MustCompile(`\n{3,}`)
@@ -150,8 +155,8 @@ func (c *Converter) postProcessMarkdown(md string) string {
 	return strings.Join(lines, "\n")
 }
 
-// decodeHTML decodes HTML bytes to string using detected charset.
-// It tries to extract charset from HTML meta tag.
+// decodeHTML decodes HTML bytes to a string using the detected character encoding.
+// It first attempts to extract the charset from HTML meta tags, then falls back to UTF-8.
 func decodeHTML(body []byte) string {
 	// Try to get charset from HTML meta tag
 	enc := getEncodingFromMeta(body)
@@ -166,8 +171,9 @@ func decodeHTML(body []byte) string {
 	return string(body)
 }
 
-// getEncodingFromMeta extracts charset from HTML meta tag using regex on raw bytes.
-// This avoids parsing the HTML with incorrect encoding which would corrupt the content.
+// getEncodingFromMeta extracts the character encoding from HTML meta tags using regex on raw bytes.
+// This approach avoids parsing HTML with an incorrect encoding, which would corrupt the content.
+// It supports both <meta charset="..."> and <meta http-equiv="Content-Type"> formats.
 func getEncodingFromMeta(body []byte) encoding.Encoding {
 	// Quick check for BOM first
 	if len(body) >= 3 && body[0] == 0xEF && body[1] == 0xBB && body[2] == 0xBF {
@@ -215,7 +221,7 @@ func getEncodingFromMeta(body []byte) encoding.Encoding {
 	return nil
 }
 
-// decodeWithEncoding decodes bytes using specified encoding.
+// decodeWithEncoding decodes bytes using the specified character encoding.
 func decodeWithEncoding(body []byte, enc encoding.Encoding) (string, error) {
 	reader := transform.NewReader(bytes.NewReader(body), enc.NewDecoder())
 	decoded, err := io.ReadAll(reader)

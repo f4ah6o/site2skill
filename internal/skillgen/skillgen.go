@@ -61,6 +61,8 @@ func (g *Generator) Generate(skillName, sourceDir, outputBase string) error {
 	return nil
 }
 
+// createSkillMD generates the SKILL.md manifest file in the skill directory.
+// The manifest content differs based on the configured format (Claude or Codex).
 func (g *Generator) createSkillMD(skillDir, skillName string) error {
 	skillMDPath := filepath.Join(skillDir, "SKILL.md")
 
@@ -82,6 +84,7 @@ func (g *Generator) createSkillMD(skillDir, skillName string) error {
 	return nil
 }
 
+// getClaudeSkillContent generates the SKILL.md content for Claude-compatible skills.
 func (g *Generator) getClaudeSkillContent(skillName string) string {
 	return fmt.Sprintf(`---
 name: %s
@@ -127,6 +130,7 @@ Options:
 `, skillName, strings.ToUpper(skillName), strings.ToUpper(skillName), strings.ToUpper(skillName))
 }
 
+// getCodexSkillContent generates the SKILL.md content for OpenAI Codex-compatible skills.
 func (g *Generator) getCodexSkillContent(skillName string) string {
 	return fmt.Sprintf(`# %s Documentation Skill
 
@@ -174,6 +178,8 @@ site2skillgo search "payment methods" --json --max-results 5 --skill-dir .
 `, strings.ToUpper(skillName), strings.ToUpper(skillName))
 }
 
+// copyMarkdownFiles copies all Markdown files from the source directory to the docs directory.
+// It performs security checks to prevent directory traversal attacks during the copy process.
 func (g *Generator) copyMarkdownFiles(sourceDir, docsDir string) error {
 	if sourceDir == "" {
 		return fmt.Errorf("source directory is empty")

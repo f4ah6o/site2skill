@@ -120,14 +120,17 @@ func (v *Validator) Validate(skillDir string) bool {
 	return true
 }
 
-// fileSize represents the size and path of a file.
+// fileSize represents the size and location of a file for analysis.
 type fileSize struct {
 	// size is the file size in bytes.
 	size int64
-	// path is the file path.
+	// path is the absolute file path.
 	path string
 }
 
+// checkSkillSize analyzes the total size of documentation files in the skill.
+// It logs warnings if the skill exceeds Claude's 8MB uncompressed size limit
+// and lists the 10 largest files for debugging purposes.
 func (v *Validator) checkSkillSize(skillDir string) {
 	docsDir := filepath.Join(skillDir, "docs")
 	if _, err := os.Stat(docsDir); os.IsNotExist(err) {

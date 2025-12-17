@@ -70,6 +70,8 @@ func (n *Normalizer) NormalizeFile(inputPath, outputPath string) error {
 	return nil
 }
 
+// extractFrontmatter parses YAML frontmatter from Markdown content.
+// It extracts the metadata section between --- delimiters and returns the frontmatter struct and remaining body.
 func (n *Normalizer) extractFrontmatter(content string) (*Frontmatter, string, error) {
 	// Match YAML frontmatter
 	re := regexp.MustCompile(`(?s)^---\n(.*?)\n---\n(.*)$`)
@@ -87,6 +89,8 @@ func (n *Normalizer) extractFrontmatter(content string) (*Frontmatter, string, e
 	return &fm, matches[2], nil
 }
 
+// normalizeLinks resolves all relative Markdown links in content to absolute URLs.
+// It uses the sourceURL as the base to resolve relative references and preserves absolute URLs unchanged.
 func (n *Normalizer) normalizeLinks(content, sourceURL string) string {
 	// Regex to capture markdown links: [text](url)
 	re := regexp.MustCompile(`\[([^\]]*)\]\(([^)]+)\)`)

@@ -9,16 +9,22 @@ import (
 	"golang.org/x/net/html"
 )
 
-// LocaleConfig はロケール優先設定
+// LocaleConfig specifies locale priority and parameter configuration for content negotiation.
+// It controls how the fetcher selects localized versions of pages when multiple languages are available.
 type LocaleConfig struct {
-	Priority  []string // 優先順位 ["en","ja"]
-	ParamName string   // クエリパラメータ名（例: "hl"）。空ならパス形式を自動検出
+	// Priority is an ordered list of preferred locales (e.g., ["en", "ja"]).
+	// The fetcher will attempt locales in this order when multiple versions exist.
+	Priority []string
+	// ParamName is the query parameter name used for locale selection (e.g., "hl" for ?hl=ja).
+	// If empty, path-based locale detection is used instead (e.g., /ja/docs).
+	ParamName string
 }
 
-// DefaultLocalePriority はデフォルトのロケール優先順位
+// DefaultLocalePriority is the default locale preference order used when none is specified.
 var DefaultLocalePriority = []string{"en", "ja"}
 
-// KnownLocales は既知のロケールコード（パス形式での検出用）
+// KnownLocales is a map of recognized locale codes for path-based locale detection.
+// It supports both language codes (e.g., "en", "ja") and region-specific codes (e.g., "en-us", "zh-tw").
 var KnownLocales = map[string]bool{
 	"en": true, "en-us": true, "en-gb": true,
 	"ja": true, "ja-jp": true,
@@ -34,12 +40,18 @@ var KnownLocales = map[string]bool{
 	"vi": true, "th": true, "id": true, "ms": true,
 }
 
-// localePathPattern はパス形式のロケールを検出する正規表現
+// localePathPattern matches path-based locale patterns in URLs.
+// It captures locale codes like "ja" or "en-us" at the start of the path (e.g., /ja/docs/page).
 var localePathPattern = regexp.MustCompile(`^/([a-z]{2}(?:-[a-zA-Z]{2,4})?)/`)
 
-// ExtractLocale はURLからロケールとcanonical pathを抽出する
-// パス形式: /ja/docs/xxx → locale="ja", canonical="/docs/xxx"
-// クエリ形式: /docs?hl=ja → locale="ja", canonical="/docs"
+// ExtractLocale extracts the locale and canonical path from a URL based on the provided configuration.
+//
+// It supports two locale detection modes:
+//   - Query parameter mode: Uses the configured ParamName (e.g., ?hl=ja)
+//   - Path mode: Detects locale from the start of the path (e.g., /ja/docs/page -> locale="ja", canonical="/docs/page")
+//
+// Returns the detected locale and the canonical path without locale information.
+// If no locale is detected, locale is empty string and canonical is the full path.
 func ExtractLocale(u *url.URL, cfg *LocaleConfig) (locale, canonical string) {
 	if u == nil {
 		return "", ""
@@ -72,13 +84,18 @@ func ExtractLocale(u *url.URL, cfg *LocaleConfig) (locale, canonical string) {
 	return "", path
 }
 
-// BuildLocaleURL は canonical path と locale から URL を構築する
+// BuildLocaleURL constructs a URL with the specified locale using the configured locale strategy.
+//
+// It combines a base URL, locale code, and canonical path. The URL is constructed using either
+// query parameter mode (appends locale as a query parameter) or path mode (prepends locale to path).
+//
+// If no locale is provided, returns baseURL + canonical without modification.
 func BuildLocaleURL(baseURL, locale, canonical string, cfg *LocaleConfig) string {
 	if locale == "" {
 		return baseURL + canonical
 	}
 
-	// クエリパラメータ形式
+	// Query parameter mode
 	if cfg != nil && cfg.ParamName != "" {
 		u, err := url.Parse(baseURL + canonical)
 		if err != nil {
@@ -90,12 +107,17 @@ func BuildLocaleURL(baseURL, locale, canonical string, cfg *LocaleConfig) string
 		return u.String()
 	}
 
-	// パス形式
+	// Path mode
 	return baseURL + "/" + locale + canonical
 }
 
-// ExtractHreflang は HTML から hreflang リンクを抽出する
-// 戻り値: map[locale]url (例: {"en": "https://...", "ja": "https://..."})
+// ExtractHreflang extracts hreflang alternate links from HTML, returning a map of locales to URLs.
+//
+// hreflang links indicate alternate versions of a page in different languages/regions.
+// This function searches the HTML for <link rel="alternate" hreflang="..."> elements
+// and returns a map like {"en": "https://...", "ja": "https://..."}.
+//
+// Locales are normalized to lowercase. Returns an empty map if no hreflang links are found.
 func ExtractHreflang(doc *html.Node) map[string]string {
 	result := make(map[string]string)
 	if doc == nil {
@@ -131,24 +153,30 @@ func ExtractHreflang(doc *html.Node) map[string]string {
 	return result
 }
 
-// SelectPreferredLocaleURL は hreflang マップから優先ロケールのURLを選択する
+// SelectPreferredLocaleURL selects the URL of the preferred locale from a hreflang map.
+//
+// It uses the provided priority list to select the best match from available locales.
+// If an exact match isn't found, it attempts expanded forms (e.g., "ja" -> "ja-jp").
+// If no matches in the priority list, returns the first available locale.
+//
+// Returns both the matched locale code and its URL. Returns empty strings if the map is empty.
 func SelectPreferredLocaleURL(hreflangMap map[string]string, priority []string) (locale, url string) {
 	if len(hreflangMap) == 0 {
 		return "", ""
 	}
 
-	// 優先順位に従って選択
+	// Select according to priority order
 	for _, loc := range priority {
 		if u, ok := hreflangMap[loc]; ok {
 			return loc, u
 		}
-		// ja -> ja-jp のような変換も試す
+		// Try expanded forms like ja -> ja-jp
 		if u, ok := hreflangMap[loc+"-"+loc]; ok {
 			return loc + "-" + loc, u
 		}
 	}
 
-	// 優先順位に一致するものがなければ最初のものを返す
+	// If no priority match, return the first available
 	for loc, u := range hreflangMap {
 		return loc, u
 	}
@@ -156,7 +184,15 @@ func SelectPreferredLocaleURL(hreflangMap map[string]string, priority []string) 
 	return "", ""
 }
 
-// NormalizeLocale はロケールコードを正規化する（小文字化、エイリアス解決）
+// NormalizeLocale normalizes locale codes to a canonical form.
+//
+// It converts locale codes to lowercase and resolves common aliases:
+//   - ja-jp -> ja
+//   - en-us, en-gb -> en
+//   - zh-hans, zh-cn -> zh-cn
+//   - zh-hant, zh-tw -> zh-tw
+//
+// This ensures consistent locale matching across different locale formats.
 func NormalizeLocale(locale string) string {
 	locale = strings.ToLower(locale)
 	// 主要なエイリアス

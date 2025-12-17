@@ -313,7 +313,7 @@ func FormatJSON(results []SearchResult) error {
 	return encoder.Encode(results)
 }
 
-// min returns the smaller of two integers.
+// min returns the minimum of two integers.
 func min(a, b int) int {
 	if a < b {
 		return a
@@ -321,7 +321,7 @@ func min(a, b int) int {
 	return b
 }
 
-// max returns the larger of two integers.
+// max returns the maximum of two integers.
 func max(a, b int) int {
 	if a > b {
 		return a
