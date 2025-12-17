@@ -1,0 +1,25 @@
+Name: site2skill request
+description: Crawl a docs site and publish a skill zip to the skills release
+title: "crawl: "
+labels: ["crawl-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        必要な情報を入力してください。自動的にクロールとRelease作成が行われます。
+  - type: input
+    id: name
+    attributes:
+      label: name
+      description: Skill name (e.g. `my-skill`). Allowed: a-zA-Z0-9._-
+      placeholder: my-skill
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: url
+      description: Documentation URL (https only).
+      placeholder: https://example.com/docs/
+    validations:
+      required: true
