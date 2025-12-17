@@ -50,8 +50,9 @@ func New(outputDir string) *Fetcher {
 	}
 }
 
-// SetLocaleConfig はロケール優先設定を行う
-// cfg が nil でない場合、ロケール優先モードが有効になる
+// SetLocaleConfig configures the fetcher to use locale priority-based content negotiation.
+// If cfg is nil, locale priority mode is disabled and the fetcher uses standard crawling.
+// When enabled, the fetcher will attempt to fetch pages in the preferred languages from LocaleConfig.Priority.
 func (f *Fetcher) SetLocaleConfig(cfg *LocaleConfig) {
 	f.localeConfig = cfg
 }
@@ -111,6 +112,9 @@ func (f *Fetcher) Fetch(targetURL string) error {
 	return nil
 }
 
+// crawl recursively downloads a page and follows links up to the maximum depth.
+// It respects the domain restriction and uses locale priority mode if configured.
+// crawl logs progress and silently skips errors to continue crawling other pages.
 func (f *Fetcher) crawl(targetURL, crawlDir string, depth int) error {
 	if depth > f.maxDepth {
 		return nil
@@ -236,6 +240,8 @@ func (f *Fetcher) crawl(targetURL, crawlDir string, depth int) error {
 	return nil
 }
 
+// getFilePath constructs a file path for saving a downloaded page.
+// It creates a structure like crawl/domain.com/path/to/page.html, using index.html for root paths.
 func (f *Fetcher) getFilePath(crawlDir string, parsedURL *url.URL) string {
 	// Create path like: crawl/domain.com/path/to/page.html
 	path := parsedURL.Path
@@ -254,6 +260,8 @@ func (f *Fetcher) getFilePath(crawlDir string, parsedURL *url.URL) string {
 	return filepath.Join(crawlDir, parsedURL.Host, path)
 }
 
+// extractLinks recursively extracts all absolute URLs from href attributes in an HTML node tree.
+// It resolves relative URLs using the provided base URL.
 func (f *Fetcher) extractLinks(n *html.Node, baseURL string) []string {
 	var links []string
 
@@ -287,6 +295,8 @@ func (f *Fetcher) extractLinks(n *html.Node, baseURL string) []string {
 	return links
 }
 
+// isNonHTMLResource checks if a URL points to a non-HTML resource based on file extension.
+// It returns true for assets like CSS, JavaScript, images, archives, and other non-HTML content.
 func isNonHTMLResource(urlStr string) bool {
 	nonHTMLExtensions := []string{
 		".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico",
@@ -407,8 +417,10 @@ func decodeWithEncoding(body []byte, enc encoding.Encoding) (string, error) {
 	return string(decoded), nil
 }
 
-// crawlWithLocalePriority はロケール優先モードでクロールする
-// 優先順位に従ってロケールを試行し、最初に見つかったものを取得する
+// crawlWithLocalePriority downloads a page using locale priority-based content negotiation.
+// It attempts to fetch the page in languages specified by the LocaleConfig.Priority order,
+// using HEAD requests to check availability before fetching the full content.
+// It falls back to the original URL if no preferred locale version is found.
 func (f *Fetcher) crawlWithLocalePriority(originalURL, canonical, crawlDir string, depth int) error {
 	parsedURL, err := url.Parse(originalURL)
 	if err != nil {
@@ -545,8 +557,9 @@ func (f *Fetcher) crawlWithLocalePriority(originalURL, canonical, crawlDir strin
 	return nil
 }
 
-// checkURLExists は HEAD リクエストで URL の存在を確認する
-// 戻り値: (exists, statusCode)
+// checkURLExists checks if a URL is accessible using a HEAD request.
+// It returns both a boolean indicating success and the HTTP status code.
+// If HEAD fails, it falls back to a GET request with a Range header.
 func (f *Fetcher) checkURLExists(targetURL string) (bool, int) {
 	req, err := http.NewRequest("HEAD", targetURL, nil)
 	if err != nil {
@@ -566,7 +579,9 @@ func (f *Fetcher) checkURLExists(targetURL string) (bool, int) {
 	return resp.StatusCode == http.StatusOK, resp.StatusCode
 }
 
-// checkURLExistsWithRange は GET + Range ヘッダーで URL の存在を確認する（HEADが不可の場合のフォールバック）
+// checkURLExistsWithRange checks if a URL is accessible using a GET request with a Range header.
+// This is a fallback for servers that don't support HEAD requests.
+// It requests only the first byte to minimize bandwidth usage.
 func (f *Fetcher) checkURLExistsWithRange(targetURL string) (bool, int) {
 	req, err := http.NewRequest("GET", targetURL, nil)
 	if err != nil {
