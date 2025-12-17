@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crawler Verification Site - site2skill-go</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --fg: #c9d1d9;
+            --accent: #58a6ff;
+            --border: #30363d;
+            --success: #3fb950;
+            --warning: #d29922;
+            --danger: #f85149;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: var(--accent); margin-bottom: 1rem; }
+        h2 { color: var(--accent); margin: 2rem 0 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        h3 { color: var(--fg); margin: 1.5rem 0 0.5rem; }
+        p { margin-bottom: 1rem; }
+        code {
+            background: #161b22;
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-family: 'SFMono-Regular', Consolas, monospace;
+        }
+        pre {
+            background: #161b22;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th { background: #161b22; }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .badge-success { background: var(--success); color: #000; }
+        .badge-warning { background: var(--warning); color: #000; }
+        .badge-danger { background: var(--danger); color: #000; }
+        ul { margin: 1rem 0 1rem 2rem; }
+        li { margin: 0.5rem 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Crawler Verification Site</h1>
+        <p>This site exists <strong>only</strong> to verify crawler behavior for <a href="https://github.com/f4ah6o/site2skill-go">site2skill-go</a>.</p>
+        <p>It intentionally exposes ambiguous and conflicting locale URL patterns.</p>
+
+        <h2>URL Patterns</h2>
+
+        <h3>Pattern A: Path-based Locale</h3>
+        <ul>
+            <li><a href="/docs/ja/getting-started/">/docs/ja/getting-started/</a> - Japanese</li>
+            <li><a href="/docs/en/getting-started/">/docs/en/getting-started/</a> - English</li>
+            <li><a href="/docs/zh-tw/getting-started/">/docs/zh-tw/getting-started/</a> - Traditional Chinese</li>
+        </ul>
+        <p>Locale is explicitly embedded in the path. These pages return 200 OK.</p>
+
+        <h3>Pattern B: Query-based Locale</h3>
+        <ul>
+            <li><a href="/docs/getting-started/?lang=ja">/docs/getting-started/?lang=ja</a></li>
+            <li><a href="/docs/getting-started/?lang=en">/docs/getting-started/?lang=en</a></li>
+        </ul>
+        <p>Path is identical. Locale is specified via query parameter.</p>
+
+        <h3>Pattern C: Mixed Locale (Conflict)</h3>
+        <ul>
+            <li><a href="/docs/ja/getting-started/?lang=en">/docs/ja/getting-started/?lang=en</a></li>
+        </ul>
+        <p>Path locale and query locale conflict. Path locale MUST win.</p>
+
+        <h3>Pattern D: No Locale</h3>
+        <ul>
+            <li><a href="/docs/getting-started/">/docs/getting-started/</a></li>
+        </ul>
+        <p>No locale hint in path or query.</p>
+
+        <h2>robots.txt Rules</h2>
+        <pre><code>User-agent: *
+Disallow: /docs/ng/
+Disallow: /docs/ja/forbidden/
+
+User-agent: TestCrawler-Allow
+Disallow:</code></pre>
+        <p>Blocked paths: <a href="/docs/ng/">/docs/ng/</a>, <a href="/docs/ja/forbidden/">/docs/ja/forbidden/</a></p>
+
+        <h2>Locale Priority</h2>
+        <pre><code>ja > en > zh-tw > others</code></pre>
+
+        <h2>Test Expectations</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Case</th>
+                    <th>Expected Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>/docs/ja/...</code> exists</td>
+                    <td><span class="badge badge-success">Only ja is fetched</span></td>
+                </tr>
+                <tr>
+                    <td>ja missing, en exists</td>
+                    <td><span class="badge badge-success">Only en is fetched</span></td>
+                </tr>
+                <tr>
+                    <td>query-only locale</td>
+                    <td><span class="badge badge-warning">Treated as locale hint</span></td>
+                </tr>
+                <tr>
+                    <td>robots disallow</td>
+                    <td><span class="badge badge-danger">Must not be fetched</span></td>
+                </tr>
+                <tr>
+                    <td>mixed locale</td>
+                    <td><span class="badge badge-success">Path locale wins</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Notes</h2>
+        <ul>
+            <li>No redirects are intentionally used</li>
+            <li>Canonical URLs may exist in multiple forms</li>
+            <li>This site is intentionally hostile to naive crawlers</li>
+        </ul>
+    </div>
+</body>
+</html>
