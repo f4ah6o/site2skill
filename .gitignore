@@ -2,7 +2,7 @@
 .claude/skills/
 
 # Go
-site2skillgo
+/site2skillgo
 bin/
 *.exe
 *.exe~

@@ -92,14 +92,17 @@ func runGenerate(args []string) {
 	fs := flag.NewFlagSet("generate", flag.ExitOnError)
 
 	var (
-		url          string
-		skillName    string
-		output       string
-		skillOutput  string
-		tempDir      string
-		skipFetch    bool
-		clean        bool
-		format       string
+		url              string
+		skillName        string
+		output           string
+		skillOutput      string
+		tempDir          string
+		skipFetch        bool
+		clean            bool
+		format           string
+		localePriority   string
+		noLocalePriority bool
+		localeParam      string
 	)
 
 	fs.StringVar(&url, "url", "", "URL of the documentation site (required)")
@@ -110,6 +113,9 @@ func runGenerate(args []string) {
 	fs.BoolVar(&skipFetch, "skip-fetch", false, "Skip the download step (use existing files in temp dir)")
 	fs.BoolVar(&clean, "clean", false, "Clean up temporary directory after completion")
 	fs.StringVar(&format, "format", "claude", "Output format: claude, codex, or both")
+	fs.StringVar(&localePriority, "locale-priority", "en,ja", "Locale priority order (comma-separated, e.g., 'en,ja,zh')")
+	fs.BoolVar(&noLocalePriority, "no-locale-priority", false, "Disable locale priority mode")
+	fs.StringVar(&localeParam, "locale-param", "", "Query parameter name for locale (e.g., 'hl' for ?hl=ja)")
 
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: site2skillgo generate <URL> <SKILL_NAME> [options]
@@ -159,10 +165,10 @@ Examples:
 		log.Fatalf("Invalid format: %s. Must be 'claude', 'codex', or 'both'", format)
 	}
 
-	executeGenerate(url, skillName, output, skillOutput, tempDir, skipFetch, clean, format)
+	executeGenerate(url, skillName, output, skillOutput, tempDir, skipFetch, clean, format, localePriority, noLocalePriority, localeParam)
 }
 
-func executeGenerate(url, skillName, output, skillOutput, tempDir string, skipFetch, clean bool, format string) {
+func executeGenerate(url, skillName, output, skillOutput, tempDir string, skipFetch, clean bool, format, localePriority string, noLocalePriority bool, localeParam string) {
 	// Setup directories
 	tempDownloadDir := filepath.Join(tempDir, "download")
 	tempMdDir := filepath.Join(tempDir, "markdown")
@@ -186,6 +192,21 @@ func executeGenerate(url, skillName, output, skillOutput, tempDir string, skipFe
 	if !skipFetch {
 		log.Printf("=== Step 1: Fetching %s ===", url)
 		f := fetcher.New(tempDownloadDir)
+
+		// Configure locale priority if enabled
+		if !noLocalePriority {
+			locales := parseLocales(localePriority)
+			cfg := &fetcher.LocaleConfig{
+				Priority:  locales,
+				ParamName: localeParam,
+			}
+			f.SetLocaleConfig(cfg)
+			log.Printf("Locale priority mode enabled: %v", locales)
+			if localeParam != "" {
+				log.Printf("Using query parameter: ?%s=<locale>", localeParam)
+			}
+		}
+
 		if err := f.Fetch(url); err != nil {
 			log.Fatalf("Failed to fetch site: %v", err)
 		}
@@ -356,6 +377,48 @@ func sanitizeFilename(name string) string {
 		}
 	}
 	return result
+}
+
+// parseLocales parses a comma-separated locale string into a slice
+func parseLocales(s string) []string {
+	if s == "" {
+		return nil
+	}
+	var result []string
+	for _, part := range splitByComma(s) {
+		trimmed := trimSpace(part)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
+}
+
+// splitByComma splits a string by commas
+func splitByComma(s string) []string {
+	var result []string
+	start := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == ',' {
+			result = append(result, s[start:i])
+			start = i + 1
+		}
+	}
+	result = append(result, s[start:])
+	return result
+}
+
+// trimSpace trims leading and trailing whitespace
+func trimSpace(s string) string {
+	start := 0
+	end := len(s)
+	for start < end && (s[start] == ' ' || s[start] == '\t') {
+		start++
+	}
+	for end > start && (s[end-1] == ' ' || s[end-1] == '\t') {
+		end--
+	}
+	return s[start:end]
 }
 
 func runSearch(args []string) {
