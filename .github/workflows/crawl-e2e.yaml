@@ -227,29 +227,62 @@ jobs:
       - name: Build site2skill-go
         run: go build -o site2skillgo ./cmd/site2skillgo
 
-      - name: Crawl and verify robots.txt compliance
+      - name: Setup uv (for Python benchmark)
+        uses: astral-sh/setup-uv@v4
+
+      - name: Run Go site2skill-go robots.txt test
         run: |
-          echo "=== Testing robots.txt compliance ==="
-          ./site2skillgo generate https://f4ah6o.github.io/site2skill-go/ robots-test-skill
+          echo "=== Testing robots.txt compliance (Go) ==="
+          ./site2skillgo generate https://f4ah6o.github.io/site2skill-go/ robots-test-go
+        continue-on-error: true
 
-          echo ""
+      - name: Run Python site2skill robots.txt test
+        run: |
+          echo "=== Testing robots.txt compliance (Python) ==="
+          uvx --from git+https://github.com/laiso/site2skill site2skill \
+            https://f4ah6o.github.io/site2skill-go/ robots-test-python
+        continue-on-error: true
+
+      - name: Verify robots.txt compliance
+        run: |
           echo "=== Checking for forbidden content ==="
+          echo ""
 
-          RESULT_NG="✅ PASS"
-          RESULT_FORBIDDEN="✅ PASS"
+          # Go version results
+          GO_RESULT_NG="✅ PASS"
+          GO_RESULT_FORBIDDEN="✅ PASS"
 
-          # Check if /docs/ng/ content was crawled (SHOULD NOT BE)
-          if grep -r "robots.txt BLOCKED" .claude/skills/robots-test-skill/ 2>/dev/null; then
+          echo "--- Go version (site2skill-go) ---"
+          if grep -r "robots.txt BLOCKED" .claude/skills/robots-test-go/ 2>/dev/null; then
             echo "❌ FAIL: /docs/ng/ content was crawled despite robots.txt disallow!"
-            RESULT_NG="❌ FAIL"
+            GO_RESULT_NG="❌ FAIL"
           else
             echo "✅ PASS: /docs/ng/ was correctly blocked"
           fi
 
-          # Check if /docs/ja/forbidden/ content was crawled (SHOULD NOT BE)
-          if grep -r "禁止コンテンツ" .claude/skills/robots-test-skill/ 2>/dev/null; then
+          if grep -r "禁止コンテンツ" .claude/skills/robots-test-go/ 2>/dev/null; then
             echo "❌ FAIL: /docs/ja/forbidden/ content was crawled despite robots.txt disallow!"
-            RESULT_FORBIDDEN="❌ FAIL"
+            GO_RESULT_FORBIDDEN="❌ FAIL"
+          else
+            echo "✅ PASS: /docs/ja/forbidden/ was correctly blocked"
+          fi
+
+          # Python version results
+          PY_RESULT_NG="✅ PASS"
+          PY_RESULT_FORBIDDEN="✅ PASS"
+
+          echo ""
+          echo "--- Python version (site2skill) ---"
+          if grep -r "robots.txt BLOCKED" .claude/skills/robots-test-python/ 2>/dev/null; then
+            echo "❌ FAIL: /docs/ng/ content was crawled despite robots.txt disallow!"
+            PY_RESULT_NG="❌ FAIL"
+          else
+            echo "✅ PASS: /docs/ng/ was correctly blocked"
+          fi
+
+          if grep -r "禁止コンテンツ" .claude/skills/robots-test-python/ 2>/dev/null; then
+            echo "❌ FAIL: /docs/ja/forbidden/ content was crawled despite robots.txt disallow!"
+            PY_RESULT_FORBIDDEN="❌ FAIL"
           else
             echo "✅ PASS: /docs/ja/forbidden/ was correctly blocked"
           fi
@@ -261,13 +294,13 @@ jobs:
           cat >> $GITHUB_STEP_SUMMARY << EOF
           ## 🤖 robots.txt Compliance Test
 
-          | Test | Result |
-          |------|--------|
-          | \`/docs/ng/\` blocked | $RESULT_NG |
-          | \`/docs/ja/forbidden/\` blocked | $RESULT_FORBIDDEN |
+          | Test | Go (site2skill-go) | Python (site2skill) |
+          |------|:------------------:|:-------------------:|
+          | \`/docs/ng/\` blocked | $GO_RESULT_NG | $PY_RESULT_NG |
+          | \`/docs/ja/forbidden/\` blocked | $GO_RESULT_FORBIDDEN | $PY_RESULT_FORBIDDEN |
           EOF
 
-          # Exit with error if any test failed
-          if [[ "$RESULT_NG" == "❌ FAIL" ]] || [[ "$RESULT_FORBIDDEN" == "❌ FAIL" ]]; then
+          # Exit with error if Go tests failed (Python is for reference only)
+          if [[ "$GO_RESULT_NG" == "❌ FAIL" ]] || [[ "$GO_RESULT_FORBIDDEN" == "❌ FAIL" ]]; then
             exit 1
           fi
