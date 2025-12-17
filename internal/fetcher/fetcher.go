@@ -34,9 +34,12 @@ type Fetcher struct {
 	downloadCount    int
 	startTime        time.Time
 	client           *http.Client
-	localeConfig     *LocaleConfig // ロケール優先設定（nil で無効）
-	robots           *RobotsManager
+	localeConfig     *LocaleConfig  // ロケール優先設定（nil で無効）
+	robotsChecker    *RobotsChecker // robots.txt チェッカー
 }
+
+// UserAgent is the user agent string used by the fetcher.
+const UserAgent = "site2skillgo/1.0 (+https://github.com/f4ah6o/site2skill-go)"
 
 // New creates a new Fetcher instance configured to save downloads to outputDir.
 func New(outputDir string) *Fetcher {
@@ -48,6 +51,7 @@ func New(outputDir string) *Fetcher {
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		robotsChecker: NewRobotsChecker(UserAgent),
 	}
 }
 
@@ -86,12 +90,6 @@ func (f *Fetcher) Fetch(targetURL string) error {
 	f.domain = parsedURL.Host
 	crawlDir := filepath.Join(f.outputDir, "crawl")
 
-	// Initialize robots.txt manager
-	f.robots = NewRobotsManager(f.client, "site2skillgo/1.0", parsedURL.Path)
-	baseURL := parsedURL.Scheme + "://" + parsedURL.Host
-	// Ignore error (fail open)
-	_ = f.robots.FetchRobotsTxt(baseURL)
-
 	// Clean/Create crawl directory
 	if err := os.RemoveAll(crawlDir); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("failed to remove crawl dir: %w", err)
@@ -128,9 +126,8 @@ func (f *Fetcher) crawl(targetURL, crawlDir string, depth int) error {
 	}
 
 	// Check robots.txt
-	if !f.robots.IsAllowed(targetURL) {
-		// Only log verbose? Or silently skip.
-		// For now, silently skip to avoid noise, or maybe debug log.
+	if !f.robotsChecker.IsAllowed(targetURL) {
+		log.Printf("Blocked by robots.txt: %s", targetURL)
 		return nil
 	}
 
@@ -184,7 +181,7 @@ func (f *Fetcher) crawl(targetURL, crawlDir string, depth int) error {
 	if err != nil {
 		return nil
 	}
-	req.Header.Set("User-Agent", "site2skillgo/1.0 (+https://github.com/f4ah6o/site2skill-go)")
+	req.Header.Set("User-Agent", UserAgent)
 
 	// Be polite: wait 1 second between requests
 	time.Sleep(1 * time.Second)
@@ -469,6 +466,12 @@ func (f *Fetcher) crawlWithLocalePriority(originalURL, canonical, crawlDir strin
 		return nil
 	}
 
+	// Check robots.txt
+	if !f.robotsChecker.IsAllowed(originalURL) {
+		log.Printf("Blocked by robots.txt: %s", originalURL)
+		return nil
+	}
+
 	baseURL := parsedURL.Scheme + "://" + parsedURL.Host
 
 	// 優先順位に従ってロケールを試行
@@ -518,7 +521,7 @@ func (f *Fetcher) crawlWithLocalePriority(originalURL, canonical, crawlDir strin
 	if err != nil {
 		return nil
 	}
-	req.Header.Set("User-Agent", "site2skillgo/1.0 (+https://github.com/f4ah6o/site2skill-go)")
+	req.Header.Set("User-Agent", UserAgent)
 
 	resp, err := f.client.Do(req)
 	if err != nil {
@@ -597,7 +600,7 @@ func (f *Fetcher) checkURLExists(targetURL string) (bool, int) {
 	if err != nil {
 		return false, 0
 	}
-	req.Header.Set("User-Agent", "site2skillgo/1.0 (+https://github.com/f4ah6o/site2skill-go)")
+	req.Header.Set("User-Agent", UserAgent)
 
 	// HEAD リクエストは短いタイムアウトで
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -619,7 +622,7 @@ func (f *Fetcher) checkURLExistsWithRange(targetURL string) (bool, int) {
 	if err != nil {
 		return false, 0
 	}
-	req.Header.Set("User-Agent", "site2skillgo/1.0 (+https://github.com/f4ah6o/site2skill-go)")
+	req.Header.Set("User-Agent", UserAgent)
 	req.Header.Set("Range", "bytes=0-0")
 
 	client := &http.Client{Timeout: 10 * time.Second}
