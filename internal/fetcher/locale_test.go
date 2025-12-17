@@ -10,10 +10,10 @@ import (
 
 func TestExtractLocale_PathFormat(t *testing.T) {
 	tests := []struct {
-		name           string
-		urlStr         string
-		wantLocale     string
-		wantCanonical  string
+		name          string
+		urlStr        string
+		wantLocale    string
+		wantCanonical string
 	}{
 		{
 			name:          "Japanese locale",
@@ -38,6 +38,12 @@ func TestExtractLocale_PathFormat(t *testing.T) {
 			urlStr:        "https://example.com/ja/",
 			wantLocale:    "ja",
 			wantCanonical: "/",
+		},
+		{
+			name:          "Locale with path prefix",
+			urlStr:        "https://example.com/site2skill-go/ja/docs/api",
+			wantLocale:    "ja",
+			wantCanonical: "/site2skill-go/docs/api",
 		},
 		{
 			name:          "No locale in path",
