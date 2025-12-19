@@ -71,8 +71,8 @@ func NewRobotsChecker(userAgent string) *RobotsChecker {
 //
 // When set, if /robots.txt returns 404, the checker will try basePath/robots.txt as a fallback.
 // For example, if basePath is "/site2skill-go", the checker will try:
-//   1. https://example.com/robots.txt
-//   2. https://example.com/site2skill-go/robots.txt (if #1 fails)
+//  1. https://example.com/robots.txt
+//  2. https://example.com/site2skill-go/robots.txt (if #1 fails)
 //
 // Parameters:
 //   - basePath: The base path (e.g., "/site2skill-go"). Will be normalized to ensure
@@ -284,10 +284,11 @@ func (r *RobotsChecker) parseRobotsTxt(reader io.Reader) *robotsRules {
 // Returns true if the path matches the pattern according to robots.txt rules.
 //
 // Examples:
-//   pathMatches("/docs/api", "/docs/") -> true (prefix match)
-//   pathMatches("/docs/api", "/docs/*") -> true (wildcard match)
-//   pathMatches("/docs", "/docs$") -> true (exact match with anchor)
-//   pathMatches("/docs/api", "/docs$") -> false (anchor doesn't match)
+//
+//	pathMatches("/docs/api", "/docs/") -> true (prefix match)
+//	pathMatches("/docs/api", "/docs/*") -> true (wildcard match)
+//	pathMatches("/docs", "/docs$") -> true (exact match with anchor)
+//	pathMatches("/docs/api", "/docs$") -> false (anchor doesn't match)
 func (r *RobotsChecker) pathMatches(path, pattern string) bool {
 	if pattern == "" {
 		return false
@@ -324,8 +325,9 @@ func (r *RobotsChecker) pathMatches(path, pattern string) bool {
 // Returns true if the path matches the wildcard pattern.
 //
 // Example:
-//   wildcardMatch("/api/v1/users", "/api/*/users", false) -> true
-//   wildcardMatch("/api/v1/users", "/api/*.html", false) -> false
+//
+//	wildcardMatch("/api/v1/users", "/api/*/users", false) -> true
+//	wildcardMatch("/api/v1/users", "/api/*.html", false) -> false
 func (r *RobotsChecker) wildcardMatch(path, pattern string, mustMatchEnd bool) bool {
 	parts := strings.Split(pattern, "*")
 

@@ -44,18 +44,19 @@ type Frontmatter struct {
 // and converting all relative links to absolute URLs.
 //
 // The normalization process:
-//   1. Reads the Markdown file
-//   2. Extracts and parses YAML frontmatter
-//   3. Resolves all relative Markdown links [text](url) to absolute URLs using source_url as the base
-//   4. Preserves absolute URLs and anchor links unchanged
-//   5. Reconstructs the file with updated frontmatter and normalized content
-//   6. Writes the result to the output path
+//  1. Reads the Markdown file
+//  2. Extracts and parses YAML frontmatter
+//  3. Resolves all relative Markdown links [text](url) to absolute URLs using source_url as the base
+//  4. Preserves absolute URLs and anchor links unchanged
+//  5. Reconstructs the file with updated frontmatter and normalized content
+//  6. Writes the result to the output path
 //
 // Link resolution examples (assuming source_url: https://example.com/docs/api.html):
-//   [guide](../guide.html) -> [guide](https://example.com/guide.html)
-//   [home](/) -> [home](https://example.com/)
-//   [section](#header) -> [section](#header) (unchanged)
-//   [external](https://other.com) -> [external](https://other.com) (unchanged)
+//
+//	[guide](../guide.html) -> [guide](https://example.com/guide.html)
+//	[home](/) -> [home](https://example.com/)
+//	[section](#header) -> [section](#header) (unchanged)
+//	[external](https://other.com) -> [external](https://other.com) (unchanged)
 //
 // Parameters:
 //   - inputPath: Path to the Markdown file to normalize

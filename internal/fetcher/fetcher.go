@@ -36,6 +36,8 @@ type Fetcher struct {
 	client           *http.Client
 	localeConfig     *LocaleConfig  // ロケール優先設定（nil で無効）
 	robotsChecker    *RobotsChecker // robots.txt チェッカー
+	includeFilters   []string
+	excludeFilters   []string
 }
 
 // UserAgent is the user agent string used by the fetcher.
@@ -60,6 +62,14 @@ func New(outputDir string) *Fetcher {
 // When enabled, the fetcher will attempt to fetch pages in the preferred languages from LocaleConfig.Priority.
 func (f *Fetcher) SetLocaleConfig(cfg *LocaleConfig) {
 	f.localeConfig = cfg
+}
+
+// SetURLFilters configures include/exclude filters used to decide which URLs to crawl.
+// When includeFilters is non-empty, only URLs containing one of the filters are crawled
+// (depth 0 is always allowed unless excluded). URLs containing any exclude filter are skipped.
+func (f *Fetcher) SetURLFilters(includeFilters, excludeFilters []string) {
+	f.includeFilters = normalizeFilters(includeFilters)
+	f.excludeFilters = normalizeFilters(excludeFilters)
 }
 
 // Fetch downloads the website starting at targetURL, recursively following
@@ -133,6 +143,10 @@ func (f *Fetcher) Fetch(targetURL string) error {
 // crawl logs progress and silently skips errors to continue crawling other pages.
 func (f *Fetcher) crawl(targetURL, crawlDir string, depth int) error {
 	if depth > f.maxDepth {
+		return nil
+	}
+
+	if !f.shouldCrawlURL(targetURL, depth) {
 		return nil
 	}
 
@@ -467,6 +481,10 @@ func (f *Fetcher) crawlWithLocalePriority(originalURL, canonical, crawlDir strin
 		return nil
 	}
 
+	if !f.shouldCrawlURL(originalURL, depth) {
+		return nil
+	}
+
 	// Only crawl same domain
 	if parsedURL.Host != f.domain {
 		return nil
@@ -645,4 +663,38 @@ func (f *Fetcher) checkURLExistsWithRange(targetURL string) (bool, int) {
 
 	// 206 Partial Content または 200 OK を成功とみなす
 	return resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusPartialContent, resp.StatusCode
+}
+
+func (f *Fetcher) shouldCrawlURL(targetURL string, depth int) bool {
+	if matchesAnyFilter(targetURL, f.excludeFilters) {
+		return false
+	}
+	if depth == 0 && len(f.includeFilters) > 0 {
+		return true
+	}
+	if len(f.includeFilters) == 0 {
+		return true
+	}
+	return matchesAnyFilter(targetURL, f.includeFilters)
+}
+
+func normalizeFilters(filters []string) []string {
+	normalized := make([]string, 0, len(filters))
+	for _, filter := range filters {
+		trimmed := strings.TrimSpace(filter)
+		if trimmed == "" {
+			continue
+		}
+		normalized = append(normalized, trimmed)
+	}
+	return normalized
+}
+
+func matchesAnyFilter(targetURL string, filters []string) bool {
+	for _, filter := range filters {
+		if strings.Contains(targetURL, filter) {
+			return true
+		}
+	}
+	return false
 }

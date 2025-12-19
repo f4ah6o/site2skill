@@ -13,23 +13,23 @@ func TestNewNormalizer(t *testing.T) {
 
 func TestNormalizeLinks(t *testing.T) {
 	tests := []struct {
-		name     string
-		content  string
+		name      string
+		content   string
 		sourceURL string
 	}{
 		{
-			name:     "simple content",
-			content:  "# Title\nSome content",
+			name:      "simple content",
+			content:   "# Title\nSome content",
 			sourceURL: "https://example.com/page",
 		},
 		{
-			name:     "content with links",
-			content:  "[link](../relative)",
+			name:      "content with links",
+			content:   "[link](../relative)",
 			sourceURL: "https://example.com/docs/",
 		},
 		{
-			name:     "empty content",
-			content:  "",
+			name:      "empty content",
+			content:   "",
 			sourceURL: "https://example.com",
 		},
 	}
