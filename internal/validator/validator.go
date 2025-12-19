@@ -28,11 +28,11 @@ func New() *Validator {
 // Validate performs comprehensive validation of a skill directory structure and content.
 //
 // Validation checks:
-//   1. Directory existence
-//   2. SKILL.md file presence and frontmatter (name, description fields)
-//   3. docs/ directory with at least one .md file
-//   4. Optional scripts/ directory detection
-//   5. Size analysis (warns if > 8MB uncompressed for Claude compatibility)
+//  1. Directory existence
+//  2. SKILL.md file presence and frontmatter (name, description fields)
+//  3. docs/ directory with at least one .md file
+//  4. Optional scripts/ directory detection
+//  5. Size analysis (warns if > 8MB uncompressed for Claude compatibility)
 //
 // Parameters:
 //   - skillDir: Path to the skill directory root to validate

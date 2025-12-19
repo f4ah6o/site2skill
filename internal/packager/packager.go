@@ -31,11 +31,12 @@ func New() *Packager {
 // which is a ZIP archive with a .skill extension for easy distribution.
 //
 // The archive structure preserves the original directory layout:
-//   skillname.skill (ZIP archive containing:)
-//     ├── SKILL.md
-//     └── docs/
-//         ├── file1.md
-//         └── file2.md
+//
+//	skillname.skill (ZIP archive containing:)
+//	  ├── SKILL.md
+//	  └── docs/
+//	      ├── file1.md
+//	      └── file2.md
 //
 // All files are compressed using DEFLATE compression. Directory entries are included
 // in the archive to preserve empty directories if present.

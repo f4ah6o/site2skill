@@ -20,7 +20,6 @@ const (
 	FormatBoth = "both"
 )
 
-
 // Generator creates skill directory structures and manifests for AI skill packages.
 // It generates platform-specific skill layouts with appropriate documentation and metadata
 // files for Claude or Codex AI assistants.
@@ -47,12 +46,13 @@ func New(format string) *Generator {
 // copies documentation files into the proper structure.
 //
 // The generated structure:
-//   skillName/
-//     ├── SKILL.md          # Platform-specific manifest and usage instructions
-//     └── docs/             # Markdown documentation files with YAML frontmatter
-//         ├── file1.md
-//         ├── file2.md
-//         └── ...
+//
+//	skillName/
+//	  ├── SKILL.md          # Platform-specific manifest and usage instructions
+//	  └── docs/             # Markdown documentation files with YAML frontmatter
+//	      ├── file1.md
+//	      ├── file2.md
+//	      └── ...
 //
 // Parameters:
 //   - skillName: Name of the skill (used as the directory name)
@@ -63,9 +63,10 @@ func New(format string) *Generator {
 // or documentation files cannot be copied.
 //
 // Example:
-//   gen := New("claude")
-//   err := gen.Generate("python-docs", "./markdown", ".claude/skills")
-//   // Creates: .claude/skills/python-docs/SKILL.md and .claude/skills/python-docs/docs/*.md
+//
+//	gen := New("claude")
+//	err := gen.Generate("python-docs", "./markdown", ".claude/skills")
+//	// Creates: .claude/skills/python-docs/SKILL.md and .claude/skills/python-docs/docs/*.md
 func (g *Generator) Generate(skillName, sourceDir, outputBase string) error {
 	skillDir := filepath.Join(outputBase, skillName)
 	docsDir := filepath.Join(skillDir, "docs")

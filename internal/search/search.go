@@ -163,9 +163,11 @@ func getContext(text, query string) []string {
 // Each result includes context lines surrounding the matches.
 //
 // Args:
+//
 //	opts: SearchOptions containing the skill directory, query string, and result limit.
 //
 // Returns:
+//
 //	A slice of SearchResult sorted by match count, or an error if the docs directory doesn't exist
 //	or if there are file read errors.
 //
@@ -258,6 +260,7 @@ func SearchDocs(opts SearchOptions) ([]SearchResult, error) {
 // headers and separators for better readability in terminals.
 //
 // Args:
+//
 //	results: A slice of SearchResult to display.
 //	query: The original search query string, displayed in the header.
 //
@@ -297,9 +300,11 @@ func FormatResults(results []SearchResult, query string) {
 // file path, match count, context snippets, source URL, and fetch timestamp.
 //
 // Args:
+//
 //	results: A slice of SearchResult to format as JSON.
 //
 // Returns:
+//
 //	An error if JSON encoding fails, otherwise nil.
 //
 // Example:
