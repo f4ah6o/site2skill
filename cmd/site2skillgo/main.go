@@ -9,7 +9,9 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"strings"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
