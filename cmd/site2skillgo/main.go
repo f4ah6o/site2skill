@@ -144,6 +144,8 @@ Generate Options:
   --locale-priority string Locale priority order (default "en,ja")
   --no-locale-priority     Disable locale priority mode
   --locale-param string    Query parameter name for locale (e.g., "hl")
+  --include string         Include only URLs containing this string (repeatable)
+  --exclude string         Exclude URLs containing this string (repeatable)
 
 Examples:
   site2skillgo generate https://f4ah6o.github.io/site2skill-go/ myskill
@@ -180,6 +182,8 @@ func runGenerate(args []string) {
 		localePriority   string
 		noLocalePriority bool
 		localeParam      string
+		includeFilters   stringList
+		excludeFilters   stringList
 	)
 
 	fs.StringVar(&url, "url", "", "URL of the documentation site (required)")
@@ -192,6 +196,8 @@ func runGenerate(args []string) {
 	fs.StringVar(&localePriority, "locale-priority", "en,ja", "Locale priority order (comma-separated, e.g., 'en,ja,zh')")
 	fs.BoolVar(&noLocalePriority, "no-locale-priority", false, "Disable locale priority mode")
 	fs.StringVar(&localeParam, "locale-param", "", "Query parameter name for locale (e.g., 'hl' for ?hl=ja)")
+	fs.Var(&includeFilters, "include", "Include only URLs containing this string (can be repeated or comma-separated)")
+	fs.Var(&excludeFilters, "exclude", "Exclude URLs containing this string (can be repeated or comma-separated)")
 
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: site2skillgo generate <URL> <SKILL_NAME> [options]
@@ -241,7 +247,7 @@ Examples:
 		log.Fatalf("Invalid format: %s. Must be 'claude', 'codex', or 'both'", format)
 	}
 
-	executeGenerate(url, skillName, global, tempDir, skipFetch, clean, format, localePriority, noLocalePriority, localeParam)
+	executeGenerate(url, skillName, global, tempDir, skipFetch, clean, format, localePriority, noLocalePriority, localeParam, includeFilters, excludeFilters)
 }
 
 // determineOutputPaths determines the output directories for skill generation based on
@@ -309,7 +315,7 @@ func determineOutputPaths(format string, global bool) (skillStructureDir, skillF
 //   - localeParam: Query parameter name for locale selection (e.g., "hl" for ?hl=ja)
 //
 // The function logs progress at each step and exits with log.Fatalf on critical errors.
-func executeGenerate(url, skillName string, global bool, tempDir string, skipFetch, clean bool, format, localePriority string, noLocalePriority bool, localeParam string) {
+func executeGenerate(url, skillName string, global bool, tempDir string, skipFetch, clean bool, format, localePriority string, noLocalePriority bool, localeParam string, includeFilters, excludeFilters []string) {
 	// Check Codex skills configuration if generating codex format
 	if format == FormatCodex || format == FormatBoth {
 		enabled, configExists, err := checkCodexSkillsConfig()
@@ -377,6 +383,16 @@ func executeGenerate(url, skillName string, global bool, tempDir string, skipFet
 			log.Printf("Locale priority mode enabled: %v", locales)
 			if localeParam != "" {
 				log.Printf("Using query parameter: ?%s=<locale>", localeParam)
+			}
+		}
+
+		if len(includeFilters) > 0 || len(excludeFilters) > 0 {
+			f.SetURLFilters(includeFilters, excludeFilters)
+			if len(includeFilters) > 0 {
+				log.Printf("Include filters: %v", includeFilters)
+			}
+			if len(excludeFilters) > 0 {
+				log.Printf("Exclude filters: %v", excludeFilters)
 			}
 		}
 
@@ -542,9 +558,10 @@ func executeGenerate(url, skillName string, global bool, tempDir string, skipFet
 // Returns the reconstructed URL as a string with the format "scheme://path".
 //
 // Example:
-//   baseURL: "https://example.com"
-//   relPath: "docs/api/index.html"
-//   returns: "https://docs/api/index"
+//
+//	baseURL: "https://example.com"
+//	relPath: "docs/api/index.html"
+//	returns: "https://docs/api/index"
 func reconstructURL(baseURL, relPath string) string {
 	// Remove .html extension if present
 	if len(relPath) > 5 && relPath[len(relPath)-5:] == ".html" {
@@ -569,8 +586,9 @@ func reconstructURL(baseURL, relPath string) string {
 // Returns a sanitized filename safe for use on all major operating systems.
 //
 // Example:
-//   "hello world!.txt" -> "hello_world_.txt"
-//   "file/path\\name" -> "file_path_name"
+//
+//	"hello world!.txt" -> "hello_world_.txt"
+//	"file/path\\name" -> "file_path_name"
 func sanitizeFilename(name string) string {
 	// Replace non-alphanumeric characters (except ._-) with _
 	result := ""
@@ -595,8 +613,9 @@ func sanitizeFilename(name string) string {
 // Returns nil if the input string is empty.
 //
 // Example:
-//   "en, ja , zh" -> ["en", "ja", "zh"]
-//   "" -> nil
+//
+//	"en, ja , zh" -> ["en", "ja", "zh"]
+//	"" -> nil
 func parseLocales(s string) []string {
 	if s == "" {
 		return nil
@@ -649,6 +668,22 @@ func trimSpace(s string) string {
 		end--
 	}
 	return s[start:end]
+}
+
+type stringList []string
+
+func (s *stringList) String() string {
+	return strings.Join(*s, ",")
+}
+
+func (s *stringList) Set(value string) error {
+	for _, part := range splitByComma(value) {
+		trimmed := trimSpace(part)
+		if trimmed != "" {
+			*s = append(*s, trimmed)
+		}
+	}
+	return nil
 }
 
 // runSearch executes the search subcommand, which searches through skill documentation files

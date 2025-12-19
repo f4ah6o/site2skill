@@ -78,6 +78,10 @@ site2skillgo generate <URL> <SKILL_NAME> [options]
   - Disable locale priority mode (fetch all locale variants)
 - `--locale-param string`
   - Query parameter name for locale (e.g., "hl" for `?hl=ja`)
+- `--include string`
+  - Include only URLs containing this string (repeatable or comma-separated)
+- `--exclude string`
+  - Exclude URLs containing this string (repeatable or comma-separated)
 
 #### Search Command
 
@@ -121,6 +125,9 @@ site2skillgo generate --locale-param "hl" https://f4ah6o.github.io/site2skill-go
 
 # Disable locale priority (fetch all variants)
 site2skillgo generate --no-locale-priority https://f4ah6o.github.io/site2skill-go/ myskill
+
+# Include/exclude specific versions
+site2skillgo generate --include "0.15.2" --exclude "0.3.0" https://ziglang.org/documentation/ zig-docs
 
 # Search in skill documentation
 site2skillgo search "authentication" --skill-dir .claude/skills/site2skill
