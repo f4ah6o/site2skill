@@ -83,6 +83,12 @@ site2skillgo generate <URL> <SKILL_NAME> [options]
 - `--exclude string`
   - Exclude URLs containing this string (repeatable or comma-separated)
 
+**URL Filtering Tips:**
+
+- Multiple `--include` or `--exclude` values can be provided either by repeating the flag or by passing a comma-separated list
+- Exclude filters always win when both include and exclude match the same URL
+- Useful for trimming crawls to a specific version or section, e.g. `--include "v1.2" --exclude "beta"`
+
 #### Search Command
 
 Search through skill documentation:
@@ -128,6 +134,9 @@ site2skillgo generate --no-locale-priority https://f4ah6o.github.io/site2skill-g
 
 # Include/exclude specific versions
 site2skillgo generate --include "0.15.2" --exclude "0.3.0" https://ziglang.org/documentation/ zig-docs
+
+# Target only URLs under /filters/ and skip /filters/exclude-*
+site2skillgo generate --include "filters" --exclude "exclude" https://f4ah6o.github.io/site2skill-go/ filter-test
 
 # Search in skill documentation
 site2skillgo search "authentication" --skill-dir .claude/skills/site2skill

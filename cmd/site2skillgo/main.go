@@ -148,10 +148,15 @@ Generate Options:
   --include string         Include only URLs containing this string (repeatable)
   --exclude string         Exclude URLs containing this string (repeatable)
 
+URL Filtering Notes:
+  - Flags can be repeated or passed as comma-separated lists (e.g., --include "v1,docs")
+  - Exclude filters take precedence when both include and exclude match the same URL
+
 Examples:
   site2skillgo generate https://f4ah6o.github.io/site2skill-go/ myskill
   site2skillgo generate https://f4ah6o.github.io/site2skill-go/ myskill --format codex
   site2skillgo generate --locale-priority "ja,en" https://f4ah6o.github.io/site2skill-go/ myskill
+  site2skillgo generate --include "filters" --exclude "beta" https://f4ah6o.github.io/site2skill-go/ myskill
   site2skillgo search "authentication" --skill-dir .claude/skills/myskill
 
 For more information on a command, use:
@@ -226,8 +231,9 @@ Examples:
   site2skillgo generate https://docs.python.org/3/ python3 --format claude
   site2skillgo generate https://stripe.com/docs/api stripe --format codex --global
   site2skillgo generate https://docs.example.com example --skip-fetch --clean
+  site2skillgo generate --include "filters" --exclude "beta" https://f4ah6o.github.io/site2skill-go/ filter-test
 `)
-	}
+        }
 
 	fs.Parse(args)
 
