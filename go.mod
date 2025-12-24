@@ -2,6 +2,8 @@ module github.com/f4ah6o/site2skill-go
 
 go 1.24.0
 
+toolchain go1.24.7
+
 require (
 	github.com/BurntSushi/toml v1.5.0
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0
