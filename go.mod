@@ -1,6 +1,6 @@
 module github.com/f4ah6o/site2skill-go
 
-go 1.24.7
+go 1.24.0
 
 require (
 	github.com/BurntSushi/toml v1.5.0
